@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pepeople Hub - Labour Management</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="light-theme">
+    <div id="app">
+        <!-- Welcome View --><div id="welcome-view" class="view active"><div class="welcome-container"><div class="welcome-card glass-card"><h1>Welcome to Pepeople Hub</h1><p>Select your designated portal access to continue.</p><div class="portal-options"><div class="portal-card" data-role="admin"><div class="portal-icon admin-icon"><i class="fas fa-briefcase"></i></div><h3>Admin Management Portal</h3><span>HR, Administrators & Management</span></div><div class="portal-card" data-role="supervisor"><div class="portal-icon employee-icon"><i class="fas fa-user-tie"></i></div><h3>Supervisor Portal</h3><span>Site Management & Operations</span></div></div></div></div></div>
+        <!-- Auth View --><div id="auth-view" class="view"><div class="login-container glass-card"><div class="login-header"><div class="logo-circle"><i class="fas fa-cube"></i></div><h2 id="login-title">Admin Management Portal</h2><p>Enter your credentials to access the portal</p></div><form id="login-form"><div class="input-group"><label>Username</label><input type="text" id="username" placeholder="Enter your username" required></div><div class="input-group"><label>Password</label><input type="password" id="password" placeholder="••••••••" required></div><button type="submit" class="btn-primary">Sign In</button><button type="button" class="btn-ghost" id="back-to-welcome"><i class="fas fa-arrow-left"></i> Back</button><div id="login-error" class="error-msg"></div></form></div></div>
+        <!-- Main View --><div id="main-view" class="view"><div class="sidebar-overlay" id="sidebar-overlay"></div><aside class="sidebar" id="sidebar"><div class="sidebar-header"><div class="logo-box"><i class="fas fa-cube"></i></div><span>Pepeople Hub</span></div><nav><ul><li class="active" data-view="dashboard"><i class="fas fa-th-large"></i> Dashboard</li><li data-view="sites"><i class="fas fa-city"></i> Site Management</li><li data-view="supervisors"><i class="fas fa-user-tie"></i> Supervisors</li><li data-view="insights"><i class="fas fa-chart-line"></i> Site Insights</li><li data-view="setup"><i class="fas fa-user-cog"></i> Labour Setup</li><li data-view="labour"><i class="fas fa-calendar-check"></i> Labour Attendance</li><li data-view="expenses"><i class="fas fa-wallet"></i> Expense Tracker</li><li data-view="reports"><i class="fas fa-file-invoice"></i> Reports & PDF</li></ul></nav><div class="sidebar-footer"><div class="user-info"><img src="https://ui-avatars.com/api/?name=Admin+User&background=6366f1&color=fff" class="avatar-img" id="user-avatar"><div class="details"><span id="user-name-display">Admin User</span><small id="user-role-display">HR Manager</small></div></div><button id="logout-btn" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</button></div></aside><main class="content"><header class="top-bar"><div class="header-left"><button id="mobile-menu-toggle" class="mobile-toggle"><i class="fas fa-bars"></i></button><h2 id="view-title">Organization Overview</h2><p id="view-subtitle">Welcome back, Admin. Here's what's happening today.</p></div><div class="header-right"><div class="search-bar"><i class="fas fa-search"></i></div><div class="theme-toggle" id="theme-toggle"><i class="fas fa-moon"></i></div><div class="notifications"><i class="fas fa-bell"></i><span class="badge"></span></div></div></header><div id="content-area"></div></main></div>
+        <!-- Modal for Detailed Insights -->
+        <div id="insight-modal" class="modal-overlay">
+            <div class="modal-content glass-card animate-in">
+                <div class="modal-header">
+                    <h3 id="modal-title">Details</h3>
+                    <button class="close-modal" onclick="window._closeModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="modal-body" class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
