@@ -18,7 +18,7 @@ const STATE = {
     sites: [
         { id: 'site-1', name: 'Metro Link Phase 1', location: 'Downtown', media: [{ type: 'image', url: 'assets/site1.png' }], createdDate: '2026-03-25', endDate: '2026-12-31', status: 'active' },
         { id: 'site-2', name: 'Highway Bypass', location: 'East Sector', media: [{ type: 'image', url: 'assets/site2.png' }], createdDate: '2026-03-28', endDate: '2026-11-15', status: 'active' },
-        { id: 'site-3', name: 'Sunset Residency', location: 'West Sector', media: [{ type: 'image', url: 'https://images.unsplash.com/photo-1503387762-592dea58ef23?auto=format&fit=crop&q=80&w=400' }], createdDate: '2026-03-30', endDate: '2026-04-01', status: 'completed' }
+        { id: 'site-3', name: 'Sunset Residency', location: 'West Sector', media: [{ type: 'image', url: 'assets/site3.png' }], createdDate: '2026-03-30', endDate: '2026-04-01', status: 'completed' }
     ], 
     labourEntries: [
         { id: 1775100000000, siteId: 'site-1', counts: { hs: 12, s: 25, us: 45 } },
@@ -50,6 +50,26 @@ window._getSiteColor = (siteId) => {
 window._closeModal = () => {
     const modal = document.getElementById('insight-modal');
     if (modal) modal.classList.remove('active');
+};
+
+window._showImageFull = (url, title) => {
+    const modal = document.getElementById('insight-modal');
+    const body = document.getElementById('modal-body');
+    const modalTitle = document.getElementById('modal-title');
+    
+    modalTitle.textContent = title || 'Project Image View';
+    
+    body.innerHTML = `
+        <div style="text-align:center; padding: 1rem;">
+            <img src="${url}" style="max-width:100%; max-height:70vh; border-radius:16px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); display:block; margin: 0 auto;">
+            <p style="margin-top:1.5rem; color:var(--text-muted); font-size:0.9rem;">${title}</p>
+            <div style="margin-top:1.5rem;">
+                <button class="btn-primary" onclick="window._closeModal()" style="padding: 0.8rem 2rem;">Close Viewer</button>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.add('active');
 };
 
 window._showConfirmModal = ({ title, message, onConfirm }) => {
@@ -208,6 +228,11 @@ window._toggleSiteStatus = (siteId) => {
     const site = STATE.sites.find(s => s.id === siteId);
     if (site) {
         site.status = site.status === 'active' ? 'completed' : 'active';
+        if (site.status === 'completed') {
+            site.endDate = new Date().toISOString().split('T')[0];
+        } else {
+            site.endDate = ''; 
+        }
         renderInsights(siteId);
     }
 };
@@ -329,7 +354,7 @@ function switchView(view) {
         try {
             switch(view) {
                 case 'dashboard': title.textContent = 'Organization Overview'; subtitle.textContent = "Welcome back, Admin. Here's what's happening today."; renderDashboard(); break;
-                case 'sites': title.textContent = 'Site Vault'; subtitle.textContent = "Manage construction sites and project locations."; renderSites(); break;
+                case 'sites': title.textContent = 'Project Vault'; subtitle.textContent = "Maintain a secure repository of project sites and detailed analytics."; renderSites(); break;
                 case 'supervisors': title.textContent = 'Supervisor Management'; subtitle.textContent = "Manage site supervisors and their project assignments."; renderSupervisors(); break;
                 case 'insights': title.textContent = 'Site Insights'; subtitle.textContent = "Detailed performance analytics for specific projects."; renderInsights(); break;
                 case 'setup': title.textContent = 'Work Categories'; subtitle.textContent = "Manage labour roles and daily salary rates."; renderLabourSetup(); break;
@@ -447,6 +472,7 @@ window._renderPortfolioTable = (filter = 'all') => {
         <table class="portfolio-table">
             <thead>
                 <tr>
+                    <th>Project Image</th>
                     <th>Site Details</th>
                     <th>Location</th>
                     <th>Created On</th>
@@ -456,8 +482,21 @@ window._renderPortfolioTable = (filter = 'all') => {
                 </tr>
             </thead>
             <tbody>
-                ${filteredSites.map(site => `
+                ${filteredSites.map(site => {
+                    const hasMedia = site.media && site.media.length > 0;
+                    const imgUrl = hasMedia ? site.media[0].url : `assets/default-project.png`;
+                    
+                    return `
                     <tr>
+                        <td>
+                            <div class="site-thumb-cell">
+                                <img src="${imgUrl}" alt="${site.name}" 
+                                     style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s;"
+                                     onclick="window._showImageFull('${imgUrl}', '${site.name}')"
+                                     onmouseover="this.style.transform='scale(1.1)'"
+                                     onmouseout="this.style.transform='scale(1)'">
+                            </div>
+                        </td>
                         <td>
                             <div class="user-cell">
                                 <div class="stat-icon-circle" style="background:var(--primary-light); color:var(--primary); width:32px; height:32px; font-size:0.9rem;"><i class="fas fa-building"></i></div>
@@ -471,8 +510,8 @@ window._renderPortfolioTable = (filter = 'all') => {
                         <td>
                             <button class="btn-primary" onclick="window._viewSiteInsights('${site.id}')" style="font-size:0.75rem; padding: 4px 10px;">View Analytics</button>
                         </td>
-                    </tr>
-                `).join('')}
+                    </tr>`;
+                }).join('')}
             </tbody>
         </table>
     `;
@@ -685,67 +724,93 @@ window._deleteSupervisor = (id) => {
 function renderSites() {
     const area = document.getElementById('content-area');
     area.innerHTML = `
-        <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
-            <div class="glass-card animate-in">
-                <h4>Add New Site</h4>
-                <form id="site-form" style="margin-top: 1.5rem;">
-                    <div class="input-group"><label>Site Name</label><input type="text" id="site-name" placeholder="Skyline Residency" required></div>
-                    <div class="input-group"><label>Location</label><input type="text" id="site-loc" placeholder="Sector 45" required></div>
-                    <div class="input-group">
-                        <label>Site Media (Photos & Videos)</label>
-                        <div class="photo-upload" id="site-photo-trigger" style="border: 2px dashed #e2e8f0; padding:1.5rem; text-align:center; border-radius:12px; cursor:pointer;">
-                            <i class="fas fa-photo-video fa-2x" style="color:var(--primary); margin-bottom:0.5rem; display:block;"></i>
-                            <small>Upload Images & Videos</small>
-                            <input type="file" id="site-photo-input" accept="image/*,video/*" multiple style="display:none">
-                        </div>
-                        <div id="media-previews" class="media-previews"></div>
-                    </div>
-                    <button type="submit" class="btn-primary" style="width:100%">Add Site</button>
-                </form>
-            </div>
-            <div class="glass-card animate-in">
-                <div class="table-header"><h4>Project Vault</h4></div>
-                <div id="site-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
-                    ${STATE.sites.map(s => {
-                        const hasMedia = s.media && s.media.length > 0;
-                        const firstMedia = hasMedia ? s.media[0] : { type: 'image', url: 'https://images.unsplash.com/photo-1541913057-903781e436d1?auto=format&fit=crop&q=80&w=300' };
-                        return `
-                        <div class="site-card glass-card" style="padding:1.2rem; border-radius:16px;">
-                            <div class="media-gallery" id="gal-${s.id}">
-                                <div class="main-display" style="position:relative">
-                                    ${firstMedia.type === 'image' ? `<img src="${firstMedia.url}" class="featured-media" id="feat-${s.id}">` : `<video src="${firstMedia.url}" class="featured-media" id="feat-${s.id}" controls></video>`}
-                                    ${firstMedia.type === 'video' ? `<div class="video-preview-badge"><i class="fas fa-play"></i> Video</div>` : ''}
-                                </div>
-                                ${hasMedia && s.media.length > 1 ? `
-                                    <div class="media-thumbs">
-                                        ${s.media.map((m, i) => `
-                                            <img src="${m.type === 'video' ? 'https://cdn-icons-png.flaticon.com/512/1179/1179120.png' : m.url}" 
-                                                 class="thumb-item ${i === 0 ? 'active' : ''}" 
-                                                 onclick="window._switchSiteMedia('${s.id}', ${i})">
-                                        `).join('')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                            <div style="margin-top:0.5rem">
-                                <strong style="font-size:1.1rem; color:var(--text-dark)">${s.name}</strong>
-                                <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.2rem;"><i class="fas fa-map-marker-alt" style="margin-right:0.4rem"></i>${s.location}</p>
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:1rem; border-top:1px solid #f1f5f9;">
-                                    <small style="color:var(--text-muted)">${s.createdDate}</small>
-                                    <span class="status-chip status-active" style="padding:2px 8px; font-size:0.7rem">Active</span>
-                                </div>
-                            </div>
-                        </div>`;
-                    }).join('')}
+        <div class="glass-card animate-in">
+            <div class="table-header" style="flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h4>Project Portfolio Management</h4>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Manage construction sites, track progress, and access site-specific repositories.</p>
                 </div>
+                <div style="display:flex; gap: 0.8rem; align-items:center;">
+                    <div class="site-select-box" style="margin:0; border:none; padding:0;">
+                        <select id="vault-filter" onchange="window._filterVault(this.value)" style="font-size:0.85rem; padding: 0.4rem 2rem 0.4rem 1rem;">
+                            <option value="all">All Projects</option>
+                            <option value="active">Active Only</option>
+                            <option value="completed">Completed Only</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="window._showAddSiteModal()">
+                        <i class="fas fa-plus"></i> Add New Site
+                    </button>
+                </div>
+            </div>
+            <div id="vault-table-container" style="margin-top: 1.5rem; overflow-x: auto;">
+                ${window._renderPortfolioTable('all')}
             </div>
         </div>
     `;
+}
 
-    const input = document.getElementById('site-photo-input');
-    const trigger = document.getElementById('site-photo-trigger');
-    const previewArea = document.getElementById('media-previews');
+window._filterVault = (status) => {
+    const container = document.getElementById('vault-table-container');
+    if (container) {
+        container.innerHTML = window._renderPortfolioTable(status);
+    }
+};
+
+window._showAddSiteModal = () => {
+    const modal = document.getElementById('insight-modal');
+    const body = document.getElementById('modal-body');
+    const title = document.getElementById('modal-title');
+    
+    title.textContent = 'Register New Project Site';
     let tempMediaArr = [];
 
+    const renderPreviews = () => {
+        const area = document.getElementById('modal-media-previews');
+        if (!area) return;
+        area.innerHTML = tempMediaArr.map((m, idx) => `
+            <div class="preview-item">
+                ${m.type === 'image' ? `<img src="${m.url}">` : `<video src="${m.url}"></video>`}
+                <button class="remove-media" onclick="window._removeModalMedia(${idx})"><i class="fas fa-times"></i></button>
+            </div>
+        `).join('');
+    };
+
+    window._removeModalMedia = (idx) => {
+        tempMediaArr.splice(idx, 1);
+        renderPreviews();
+    };
+
+    body.innerHTML = `
+        <form id="new-site-form">
+            <div class="input-group">
+                <label>Site / Project Name</label>
+                <input type="text" id="new-site-name" placeholder="e.g., Metro Link Phase 2" required>
+            </div>
+            <div class="input-group">
+                <label>Geography / Location</label>
+                <input type="text" id="new-site-loc" placeholder="e.g., North Sector" required>
+            </div>
+            <div class="input-group">
+                <label>Multimedia Repository (Photos & Blueprints)</label>
+                <div class="photo-upload" id="modal-site-photo-trigger" style="border: 2px dashed #e2e8f0; padding:2rem; text-align:center; border-radius:16px; cursor:pointer; background:var(--primary-light);">
+                    <i class="fas fa-cloud-upload-alt fa-2x" style="color:var(--primary); margin-bottom:1rem; display:block;"></i>
+                    <p style="font-size:0.9rem; font-weight:600; color:var(--text-dark);">Click to upload project media</p>
+                    <small style="color:var(--text-muted);">Supports images and site videos</small>
+                    <input type="file" id="modal-site-photo-input" accept="image/*,video/*" multiple style="display:none">
+                </div>
+                <div id="modal-media-previews" class="media-previews" style="margin-top:1.5rem;"></div>
+            </div>
+            <div style="display:flex; gap: 1rem; margin-top: 2.5rem;">
+                <button type="submit" class="btn-primary" style="flex:1">Initialize Project</button>
+                <button type="button" class="btn-ghost" onclick="window._closeModal()" style="flex:1; border: 1px solid #e2e8f0; border-radius:12px;">Cancel</button>
+            </div>
+        </form>
+    `;
+
+    const input = document.getElementById('modal-site-photo-input');
+    const trigger = document.getElementById('modal-site-photo-trigger');
+    
     trigger.addEventListener('click', () => input.click());
     input.addEventListener('change', (e) => {
         const files = Array.from(e.target.files);
@@ -754,55 +819,32 @@ function renderSites() {
             const type = file.type.startsWith('video') ? 'video' : 'image';
             reader.onload = (re) => {
                 tempMediaArr.push({ type, url: re.target.result });
-                renderTempPreviews();
+                renderPreviews();
             };
             reader.readAsDataURL(file);
         });
     });
 
-    function renderTempPreviews() {
-        previewArea.innerHTML = tempMediaArr.map((m, idx) => `
-            <div class="preview-item">
-                ${m.type === 'image' ? `<img src="${m.url}">` : `<video src="${m.url}"></video>`}
-                <button class="remove-media" onclick="window._removeMedia(${idx})"><i class="fas fa-times"></i></button>
-            </div>
-        `).join('');
-    }
-
-    window._removeMedia = (idx) => { tempMediaArr.splice(idx, 1); renderTempPreviews(); };
-    window._switchSiteMedia = (siteId, index) => {
-        const site = STATE.sites.find(s => s.id === siteId);
-        if (!site) return;
-        const media = site.media[index];
-        const display = document.querySelector(`#gal-${siteId} .main-display`);
-        const feat = document.getElementById(`feat-${siteId}`);
-        
-        // Update main content
-        if (media.type === 'image') {
-            display.innerHTML = `<img src="${media.url}" class="featured-media" id="feat-${siteId}">`;
-        } else {
-            display.innerHTML = `<video src="${media.url}" class="featured_media" id="feat-${siteId}" controls autoplay></video><div class="video-preview-badge"><i class="fas fa-play"></i> Video</div>`;
-        }
-        
-        // Update active thumbnail
-        const thumbs = document.querySelectorAll(`#gal-${siteId} .thumb-item`);
-        thumbs.forEach((t, i) => t.classList.toggle('active', i === index));
-    };
-
-    document.getElementById('site-form').addEventListener('submit', (e) => {
+    document.getElementById('new-site-form').addEventListener('submit', (e) => {
         e.preventDefault();
+        const name = document.getElementById('new-site-name').value;
+        const location = document.getElementById('new-site-loc').value;
+        
         STATE.sites.push({
-            id: `site-${Date.now()}`, 
-            name: document.getElementById('site-name').value,
-            location: document.getElementById('site-loc').value, 
-            media: tempMediaArr, 
+            id: `site-${Date.now()}`,
+            name,
+            location,
+            media: tempMediaArr,
             createdDate: new Date().toISOString().split('T')[0],
             status: 'active'
         });
-        tempMediaArr = [];
+        
+        window._closeModal();
         renderSites();
     });
-}
+
+    modal.classList.add('active');
+};
 
 function renderLabourSetup() {
     const area = document.getElementById('content-area');

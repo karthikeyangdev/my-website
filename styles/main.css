@@ -490,6 +490,21 @@ body.dark-theme .tag-us, body.dark-theme .tag-tools { background: rgba(249, 115,
         grid-template-columns: 1fr !important;
         gap: 1.5rem !important;
     }
+
+    /* Site Insights Responsiveness */
+    .insights-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .insight-card-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        height: 300px; /* Slightly smaller on mobile */
+    }
 }
 
 @media (max-width: 480px) {
